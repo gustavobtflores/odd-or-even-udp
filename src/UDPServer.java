@@ -1,3 +1,8 @@
+import game.GameState;
+import game.OddEven;
+import player.Player;
+import player.PlayerMessage;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -41,10 +46,33 @@ public class UDPServer {
         UDPServer server = new UDPServer();
         System.out.println("UDP server running on port "+server.port);
 
-        DatagramPacket received = server.receive();
-        String message = new String(received.getData()).trim();
+        OddEven oddEven = new OddEven();
 
-        server.send(message+" ACK", received.getAddress(), received.getPort());
+        while(!oddEven.isOver()) {
+            DatagramPacket received = server.receive();
+            String message = new String(received.getData()).trim();
+
+            InetAddress ip = received.getAddress();
+            int port = received.getPort();
+
+            try {
+                switch(oddEven.getState()){
+                    case GameState.WAITING_PLAYERS:
+                        System.out.println("Waiting players connection...");
+                        System.out.println("New player with IP: "+ip+" and port: "+port);
+                        oddEven.addPlayer(new Player(ip, port));
+                        if(oddEven.isFull()){
+                            oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
+                        }
+                        break;
+                    case WAITING_PLAYERS_CHOOSE_SIDE:
+                        System.out.println("Waiting players to choose sides...");
+                        break;
+                }
+            } catch (Exception e) {
+                server.send(e.getMessage(), ip, port);
+            }
+        }
 
         server.close();
     }

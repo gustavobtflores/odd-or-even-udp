@@ -1,3 +1,6 @@
+import game.GameState;
+import player.PlayerMessage;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,9 +10,9 @@ import java.net.InetAddress;
 
 public class UDPClient {
 
-    private DatagramSocket socket;
-    private InetAddress address;
-    private int port;
+    private final DatagramSocket socket;
+    private final InetAddress address;
+    private final int port;
 
     public UDPClient(String address, int port) throws IOException {
         this.address = InetAddress.getByName(address);
@@ -32,17 +35,7 @@ public class UDPClient {
 
     public static void main(String[] args) throws IOException {
         UDPClient client = new UDPClient(Config.SERVER_ADDRESS, Config.SERVER_PORT);
-
-        Thread sendThread = new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-                String message;
-                while ((message = reader.readLine()) != null) {
-                    client.send(message);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         Thread receiveThread = new Thread(() -> {
             while (true) {
@@ -55,9 +48,20 @@ public class UDPClient {
             }
         });
 
-        sendThread.start();
         receiveThread.start();
 
-        client.send("Connection test");
+        GameState gameState = GameState.PLAYER_CONNECTING_SERVER;
+
+        while (gameState != GameState.ENDED) {
+            switch(gameState){
+                case GameState.PLAYER_CONNECTING_SERVER:
+                    client.send(PlayerMessage.CONNECT.name());
+                    gameState = GameState.PLAYER_CHOOSING_SIDE;
+                case GameState.PLAYER_CHOOSING_SIDE:
+                    System.out.println("Qual lado você deseja?\n1 - Par\n2 - Ímpar");
+                    String playerChoose = reader.readLine();
+                    client.send(playerChoose);
+            }
+        }
     }
 }
