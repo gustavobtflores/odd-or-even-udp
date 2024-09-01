@@ -1,67 +1,81 @@
 import game.GameState;
-import player.PlayerMessage;
+import message.Message;
+import message.MessageFabric;
+import player.PlayerSide;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class UDPClient {
-
-    private final DatagramSocket socket;
-    private final InetAddress address;
-    private final int port;
-
-    public UDPClient(String address, int port) throws IOException {
-        this.address = InetAddress.getByName(address);
-        this.port = port;
-        this.socket = new DatagramSocket();
-    }
-
-    public void send(String message) throws IOException {
-        byte[] buffer = message.getBytes();
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
-        socket.send(packet);
-    }
-
-    public String receive() throws IOException {
-        byte[] buffer = new byte[1024];
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        socket.receive(packet);
-        return new String(packet.getData(), 0, packet.getLength());
-    }
-
-    public static void main(String[] args) throws IOException {
-        UDPClient client = new UDPClient(Config.SERVER_ADDRESS, Config.SERVER_PORT);
+    public static void main(String[] args) throws IOException, InterruptedException {
+        DatagramSocket socket = new DatagramSocket();
+        Connection connection = new Connection(socket, InetAddress.getByName(Config.SERVER_ADDRESS), Config.SERVER_PORT);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-        Thread receiveThread = new Thread(() -> {
-            while (true) {
-                try {
-                    String receivedMessage = client.receive();
-                    System.out.println(receivedMessage);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        receiveThread.start();
 
         GameState gameState = GameState.PLAYER_CONNECTING_SERVER;
 
+        int counter = 0;
+
         while (gameState != GameState.ENDED) {
-            switch(gameState){
+            switch (gameState) {
                 case GameState.PLAYER_CONNECTING_SERVER:
-                    client.send(PlayerMessage.CONNECT.name());
-                    gameState = GameState.PLAYER_CHOOSING_SIDE;
-                case GameState.PLAYER_CHOOSING_SIDE:
-                    System.out.println("Qual lado você deseja?\n1 - Par\n2 - Ímpar");
-                    String playerChoose = reader.readLine();
-                    client.send(playerChoose);
+                    connection.sendMessage(MessageFabric.createConnectionMessage());
+                    gameState = GameState.PLAYER_WAITING_OTHERS;
+
+                    Thread.sleep(500);
+
+                    break;
+                case PLAYER_WAITING_OTHERS:
+                    Message msg = connection.readMessage();
+
+                    if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameState.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
+                        gameState = GameState.PLAYER_CHOOSING_SIDE;
+                        System.out.println("Jogadores conectados");
+                    } else if (counter <= 0) {
+                        System.out.println("Esperando jogadores se conectarem...");
+                        counter++;
+                    }
+
+                    break;
+                case PLAYER_CHOOSING_SIDE:
+                    System.out.println("Escolha o lado que deseja:\n1 - Ímpar\n2 - Par");
+
+                    int playerChoose = Integer.parseInt(reader.readLine());
+
+                    connection.sendMessage(MessageFabric.createChooseSideMessage(PlayerSide.values()[playerChoose - 1]));
+
+                    msg = connection.readMessage(2000);
+
+                    if(msg != null){
+                        if(msg.isErrorMessage()){
+                            System.out.println("Esse lado já foi escolhido por outro jogador!");
+                            continue;
+                        } else {
+                            gameState = GameState.PLAYER_WAITING_OPPONENT_CHOOSE;
+                        }
+                    }
+
+                    break;
+                case PLAYER_WAITING_OPPONENT_CHOOSE:
+                    if(counter <= 1) {
+                        System.out.println("Aguarde o outro jogador escolher o lado...");
+                        counter++;
+                    }
+
+                    break;
+                case PLAYER_CHOOSING_PLAY:
+                    System.out.println("Digite o número que deseja jogar: ");
+
+                    String playerPlay = reader.readLine();
+
+                    break;
+                default:
             }
+
+            Thread.sleep(500);
         }
     }
 }

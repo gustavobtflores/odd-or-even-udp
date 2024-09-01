@@ -1,14 +1,16 @@
 package game;
 
 import game.exceptions.GameFullException;
+import game.exceptions.SideAlreadyChosenException;
 import player.Player;
 import player.PlayerSide;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class OddEven {
-    ArrayList<Player> players = new ArrayList<>();
+    HashMap<String, Player> players = new HashMap<>();
     private boolean isOver = false;
     private GameState state = GameState.WAITING_PLAYERS;
     private ArrayList<Integer> availableSides = new ArrayList<>(Arrays.asList(PlayerSide.ODD.ordinal(), PlayerSide.EVEN.ordinal()));
@@ -20,7 +22,23 @@ public class OddEven {
             throw new GameFullException("O jogo já atingiu o máximo de jogadores");
         }
 
-        this.players.add(player);
+        String playerKey = player.getAddress().toString() + player.getPort();
+
+        this.players.put(playerKey, player);
+    }
+
+    public void chooseSide(String playerKey, PlayerSide side) throws SideAlreadyChosenException {
+        if(availableSides.contains(side.ordinal())) {
+            int sideIdx = availableSides.indexOf(side.ordinal());
+            availableSides.remove(sideIdx);
+
+            Player player = players.get(playerKey);
+
+            player.setSide(side);
+            System.out.println("Lado " + side + " escolhido pelo jogador " + player.getAddress() + " " + player.getPort());
+        } else {
+            throw new SideAlreadyChosenException("Esse lado já foi escolhido por outro jogador");
+        }
     }
 
     public boolean isFull(){
@@ -37,5 +55,9 @@ public class OddEven {
 
     public void setState(GameState state) {
         this.state = state;
+    }
+
+    public HashMap<String, Player> getPlayers() {
+        return players;
     }
 }
