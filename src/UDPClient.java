@@ -91,5 +91,6 @@ public class UDPClient {
 
         connection.stop();
         socket.close();
+        System.exit(0);
     }
 }

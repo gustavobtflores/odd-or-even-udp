@@ -10,7 +10,7 @@
 
 ### 3. **Funcionalidades do Jogo**
 
-- [X] **3.1:** O servidor deve esperar que todos os jogadores se conectem e enviem uma mensagem de pronto para iniciar a partida
+- [X] **3.1:** O servidor deve esperar que todos os jogadores se conectem para iniciar o jogo
 
 
 ### Classes

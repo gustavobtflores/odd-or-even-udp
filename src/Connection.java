@@ -65,6 +65,7 @@ public class Connection {
         @Override
         public void run() {
             while (true) {
+                if(Thread.currentThread().isInterrupted()) break;
 
                 try {
                     byte[] buffer = new byte[1024];
@@ -100,6 +101,8 @@ public class Connection {
         @Override
         public void run() {
             while (true) {
+                if(Thread.currentThread().isInterrupted()) break;
+
                 if (!queue.isEmpty()) {
                     try {
                         Message msg = queue.remove();
