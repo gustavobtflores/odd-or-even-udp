@@ -18,18 +18,29 @@ public class UDPClient {
         GameState gameState = GameState.PLAYER_CONNECTING_SERVER;
 
         int counter = 0;
+        Message msg = null;
 
         while (gameState != GameState.ENDED) {
             switch (gameState) {
                 case GameState.PLAYER_CONNECTING_SERVER:
                     connection.sendMessage(MessageFabric.createConnectionMessage());
-                    gameState = GameState.PLAYER_WAITING_OTHERS;
+                    msg = connection.readMessage(2000);
+
+                    System.out.println(msg);
+
+                    if(msg != null && !msg.isErrorMessage()) {
+                        gameState = GameState.PLAYER_WAITING_OTHERS;
+                    } else {
+                        System.out.println("O servidor já está lotado");
+                        System.out.println("Desconectando...");
+                        break;
+                    }
 
                     Thread.sleep(500);
 
                     break;
                 case PLAYER_WAITING_OTHERS:
-                    Message msg = connection.readMessage();
+                    msg = connection.readMessage();
 
                     if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameState.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
                         gameState = GameState.PLAYER_CHOOSING_SIDE;
@@ -77,5 +88,8 @@ public class UDPClient {
 
             Thread.sleep(500);
         }
+
+        connection.stop();
+        socket.close();
     }
 }

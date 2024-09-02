@@ -43,6 +43,11 @@ public class Connection {
         this.output.sendMessage(message);
     }
 
+    public void stop(){
+        this.input.interrupt();
+        this.output.interrupt();
+    }
+
 
     private class Receiver extends Thread {
         private final DatagramSocket socket;
@@ -55,10 +60,6 @@ public class Connection {
 
         public Message readMessage() {
             return this.queue.poll();
-        }
-
-        public void clearInput() {
-            this.queue.clear();
         }
 
         @Override
@@ -76,7 +77,6 @@ public class Connection {
                     Message msg = (Message) objectInStream.readObject();
 
                     this.queue.offer(msg);
-
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }

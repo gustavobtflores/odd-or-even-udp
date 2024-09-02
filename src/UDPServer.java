@@ -1,5 +1,6 @@
 import game.GameState;
 import game.OddEven;
+import game.exceptions.GameFullException;
 import game.exceptions.SideAlreadyChosenException;
 import message.Message;
 import message.MessageFabric;
@@ -29,24 +30,32 @@ public class UDPServer {
                 InetAddress originAddress = packet.address();
                 int originPort = packet.port();
 
-
                 try {
                     switch (oddEven.getState()) {
                         case GameState.WAITING_PLAYERS:
-                            System.out.println("Esperando jogadores se conectarem...");
-                            System.out.println("Novo jogador com IP: " + originAddress + " e porta: " + originPort);
-                            oddEven.addPlayer(new Player(originAddress, originPort));
+                            try {
+                                System.out.println("Esperando jogadores se conectarem...");
+                                System.out.println("Novo jogador com IP: " + originAddress + " e porta: " + originPort);
+                                oddEven.addPlayer(new Player(originAddress, originPort));
+                                serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, MessageFabric.createOkMessage()));
 
-                            if (oddEven.isFull()) {
-                                oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
-                                for (Player player : oddEven.getPlayers().values()) {
-                                    Message msgState = MessageFabric.createGameStateMessage(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
-                                    serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), msgState));
+                                if (oddEven.isFull()) {
+                                    oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
+
+                                    for (Player player : oddEven.getPlayers().values()) {
+                                        Message msgState = MessageFabric.createGameStateMessage(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
+                                        serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), msgState));
+                                    }
                                 }
+                            } catch (GameFullException e) {
+                                Message errorMsg = MessageFabric.createErrorMessage();
+                                serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, errorMsg));
                             }
+
                             break;
                         case WAITING_PLAYERS_CHOOSE_SIDE:
                             System.out.println("Esperando jogadores escolherem seus lados...");
+
                             if (packet.message().isChooseSideMessage()) {
                                 PlayerSide chosenSide = PlayerSide.values()[packet.message().getFields()[1]];
                                 System.out.println("Escolha de lado recebida do IP: " + originAddress + " e porta: " + originPort + " valor: " + chosenSide);
@@ -155,6 +164,5 @@ public class UDPServer {
         }
     }
 
-    private record ClientPacket(InetAddress address, int port, Message message) {
-    }
+    public record ClientPacket(InetAddress address, int port, Message message) {}
 }

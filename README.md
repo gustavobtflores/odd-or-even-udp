@@ -10,12 +10,11 @@
 
 ### 3. **Funcionalidades do Jogo**
 
-- [ ] **3.1:** O servidor deve esperar que todos os jogadores se conectem e enviem uma mensagem de pronto para iniciar a partida
-- [ ] **3.2:** O servidor deve controlar os turnos dos jogadores, enviando uma mensagem para o jogador que estiver na vez
+- [X] **3.1:** O servidor deve esperar que todos os jogadores se conectem e enviem uma mensagem de pronto para iniciar a partida
 
 
 ### Classes
 
 - Player: classe responsável por armazenar as informações de rede do jogador e eventualmente alguma informação sobre o jogo
-- OddEven: classe responsável por controlar as regras do jogo (pode receber uma lista de jogadores para controlar os turnos)
+- OddEven: classe responsável por controlar as regras do jogo
 - UDPServer/UDPClient - classes que controlam a conexão na rede

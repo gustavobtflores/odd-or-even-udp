@@ -17,7 +17,7 @@ public class OddEven {
 
     public OddEven(){}
 
-    public void addPlayer(Player player) {
+    public void addPlayer(Player player) throws GameFullException {
         if(isFull()) {
             throw new GameFullException("O jogo já atingiu o máximo de jogadores");
         }
@@ -29,8 +29,7 @@ public class OddEven {
 
     public void chooseSide(String playerKey, PlayerSide side) throws SideAlreadyChosenException {
         if(availableSides.contains(side.ordinal())) {
-            int sideIdx = availableSides.indexOf(side.ordinal());
-            availableSides.remove(sideIdx);
+            availableSides.remove((Integer) side.ordinal());
 
             Player player = players.get(playerKey);
 
