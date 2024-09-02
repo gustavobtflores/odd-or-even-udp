@@ -20,7 +20,7 @@ public class UDPClient {
         int counter = 0;
         Message msg = null;
 
-        while (gameState != GameState.ENDED) {
+        gameLoop: while (gameState != GameState.ENDED) {
             switch (gameState) {
                 case GameState.PLAYER_CONNECTING_SERVER:
                     connection.sendMessage(MessageFabric.createConnectionMessage());
@@ -33,7 +33,7 @@ public class UDPClient {
                     } else {
                         System.out.println("O servidor já está lotado");
                         System.out.println("Desconectando...");
-                        break;
+                        break gameLoop;
                     }
 
                     Thread.sleep(500);
