@@ -14,6 +14,7 @@ public class OddEven {
     private boolean isOver = false;
     private GameState state = GameState.WAITING_PLAYERS;
     private ArrayList<Integer> availableSides = new ArrayList<>(Arrays.asList(PlayerSide.ODD.ordinal(), PlayerSide.EVEN.ordinal()));
+    private ArrayList<Integer> playList = new ArrayList<>();
 
     public OddEven(){}
 
@@ -40,12 +41,42 @@ public class OddEven {
         }
     }
 
+    public void play(int play) {
+        this.playList.add(play);
+    }
+
+    public Player computeWinner(){
+        int playsSum = 0;
+
+        for (int play: playList){
+            playsSum += play;
+        }
+
+        PlayerSide winnerSide = playsSum % 2 == 0 ? PlayerSide.EVEN : PlayerSide.ODD;
+
+        for(Player player: players.values()){
+            if(player.getSide() == winnerSide) {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
     public boolean isFull(){
         return this.players.size() == 2;
     }
 
     public boolean isOver() {
         return isOver;
+    }
+
+    public boolean hasAllPlayersChosenSide(){
+        return this.availableSides.isEmpty();
+    }
+
+    public boolean hasAllPlayersPlayed(){
+        return this.playList.size() == 2;
     }
 
     public GameState getState(){

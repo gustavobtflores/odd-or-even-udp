@@ -22,61 +22,121 @@ public class UDPServer {
         System.out.println("Server UDP rodando na porta: " + Config.SERVER_PORT);
 
         OddEven oddEven = new OddEven();
+        ClientPacket packet = null;
+
+        GameState lastLoggedGameState = null;
 
         while (!oddEven.isOver()) {
-            ClientPacket packet = serverReceiver.readMessage();
+            if(lastLoggedGameState != oddEven.getState()){
+                logGameState(oddEven.getState());
+                lastLoggedGameState = oddEven.getState();
+            }
 
-            if (packet != null) {
-                InetAddress originAddress = packet.address();
-                int originPort = packet.port();
+            try {
+                switch (oddEven.getState()) {
+                    case GameState.WAITING_PLAYERS:
+                        packet = serverReceiver.readMessage();
+                        if(packet == null) break;
 
-                try {
-                    switch (oddEven.getState()) {
-                        case GameState.WAITING_PLAYERS:
-                            try {
-                                System.out.println("Esperando jogadores se conectarem...");
-                                System.out.println("Novo jogador com IP: " + originAddress + " e porta: " + originPort);
-                                oddEven.addPlayer(new Player(originAddress, originPort));
-                                serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, MessageFabric.createOkMessage()));
+                        try {
+                            oddEven.addPlayer(new Player(packet.address(), packet.port()));
+                            System.out.println("Novo jogador com IP: " + packet.address() + " e porta: " + packet.port());
+                            serverBroadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
 
-                                if (oddEven.isFull()) {
-                                    oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
+                            if (oddEven.isFull()) {
+                                oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
 
-                                    for (Player player : oddEven.getPlayers().values()) {
-                                        Message msgState = MessageFabric.createGameStateMessage(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
-                                        serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), msgState));
-                                    }
-                                }
-                            } catch (GameFullException e) {
-                                Message errorMsg = MessageFabric.createErrorMessage();
-                                serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, errorMsg));
-                            }
-
-                            break;
-                        case WAITING_PLAYERS_CHOOSE_SIDE:
-                            System.out.println("Esperando jogadores escolherem seus lados...");
-
-                            if (packet.message().isChooseSideMessage()) {
-                                PlayerSide chosenSide = PlayerSide.values()[packet.message().getFields()[1]];
-                                System.out.println("Escolha de lado recebida do IP: " + originAddress + " e porta: " + originPort + " valor: " + chosenSide);
-
-                                String playerKey = originAddress.toString() + originPort;
-
-                                try {
-                                    oddEven.chooseSide(playerKey, chosenSide);
-                                    serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, MessageFabric.createOkMessage()));
-                                } catch (SideAlreadyChosenException e) {
-                                    serverBroadcaster.sendMessage(new ClientPacket(originAddress, originPort, MessageFabric.createErrorMessage()));
+                                for (Player player : oddEven.getPlayers().values()) {
+                                    Message msgState = MessageFabric.createGameStateMessage(GameState.WAITING_PLAYERS_CHOOSE_SIDE);
+                                    serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), msgState));
                                 }
                             }
-                            break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                        } catch (GameFullException e) {
+                            Message errorMsg = MessageFabric.createErrorMessage();
+                            serverBroadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), errorMsg));
+                        }
+
+                        break;
+                    case WAITING_PLAYERS_CHOOSE_SIDE:
+                        packet = serverReceiver.readMessage();
+
+                        if(packet == null || !packet.message.isChooseSideMessage()) break;
+
+                        PlayerSide chosenSide = PlayerSide.values()[packet.message().getFields()[1]];
+                        System.out.println("Escolha de lado recebida do IP: " + packet.address() + " e porta: " + packet.port() + " valor: " + chosenSide);
+
+                        String playerKey = packet.address().toString() + packet.port();
+
+                        try {
+                            oddEven.chooseSide(playerKey, chosenSide);
+                            serverBroadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
+
+                            if (oddEven.hasAllPlayersChosenSide()) {
+                                oddEven.setState(GameState.WAITING_PLAYERS_CHOOSE_PLAY);
+
+                                for (Player player : oddEven.getPlayers().values()) {
+                                    Message msgState = MessageFabric.createGameStateMessage(GameState.WAITING_PLAYERS_CHOOSE_PLAY);
+                                    serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), msgState));
+                                }
+                            }
+
+                        } catch (SideAlreadyChosenException e) {
+                            serverBroadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createErrorMessage()));
+                        }
+                        break;
+                    case WAITING_PLAYERS_CHOOSE_PLAY:
+                        packet = serverReceiver.readMessage();
+                        if(packet == null) break;
+
+                        if (packet.message().isPlayMessage()) {
+                            int playerPlay = packet.message().getFields()[1];
+                            oddEven.play(playerPlay);
+                            serverBroadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
+                        }
+
+                        if (oddEven.hasAllPlayersPlayed()) oddEven.setState(GameState.COMPUTE_RESULT);
+
+                        System.out.println(oddEven.hasAllPlayersPlayed());
+
+                        break;
+
+                    case COMPUTE_RESULT:
+                        Player winnerPlayer = oddEven.computeWinner();
+
+                        if (winnerPlayer != null) {
+                            for (Player player : oddEven.getPlayers().values()) {
+                                serverBroadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createEndGameMessage(player.equals(winnerPlayer))));
+                            }
+                        }
+
+                        break;
+                    case WAITING_PLAYERS_RESTART_OR_END:
+                        break;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             Thread.sleep(1000);
+        }
+    }
+
+    public static void logGameState(GameState state) {
+        switch(state) {
+            case WAITING_PLAYERS:
+                System.out.println("Esperando jogadores se conectarem...");
+                break;
+            case WAITING_PLAYERS_CHOOSE_SIDE:
+                System.out.println("Esperando jogadores escolherem seus lados...");
+                break;
+            case WAITING_PLAYERS_CHOOSE_PLAY:
+                System.out.println("Esperando jogadores escolherem suas jogadas...");
+                break;
+            case COMPUTE_RESULT:
+                System.out.println("Calculando resultado do jogo...");
+            case WAITING_PLAYERS_RESTART_OR_END:
+                System.out.println("Aguardando jogadores decidirem se desejam jogar ou finalizar o jogo");
+            default:
         }
     }
 
@@ -164,5 +224,6 @@ public class UDPServer {
         }
     }
 
-    public record ClientPacket(InetAddress address, int port, Message message) {}
+    public record ClientPacket(InetAddress address, int port, Message message) {
+    }
 }

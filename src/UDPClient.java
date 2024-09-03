@@ -71,16 +71,45 @@ public class UDPClient {
 
                     break;
                 case PLAYER_WAITING_OPPONENT_CHOOSE:
-                    if(counter <= 1) {
-                        System.out.println("Aguarde o outro jogador escolher o lado...");
-                        counter++;
+                    System.out.println("Aguarde o outro jogador escolher o lado...");
+
+                    while(true) {
+                        msg = connection.readMessage(2000);
+
+                        if(msg != null && msg.getFields()[1] == GameState.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
+                            gameState = GameState.PLAYER_CHOOSING_PLAY;
+                            break;
+                        } else {
+                            Thread.sleep(500);
+                        }
                     }
 
                     break;
                 case PLAYER_CHOOSING_PLAY:
                     System.out.println("Digite o número que deseja jogar: ");
+                    int playerPlay = Integer.parseInt(reader.readLine());
+                    connection.sendMessage(MessageFabric.createPlayMessage(playerPlay));
 
-                    String playerPlay = reader.readLine();
+                    msg = connection.readMessage(2000);
+
+                    if(msg != null) {
+                        gameState = GameState.PLAYER_WAITING_RESULT;
+                    }
+
+                    break;
+                case PLAYER_WAITING_RESULT:
+                    msg = connection.readMessage(2000);
+
+                    if(msg != null && msg.isEndGameMessage()) {
+                        String endGameMessage = msg.getFields()[1] != 0 ? "Você ganhou :)" : "Você perdeu :(";
+                        System.out.println(endGameMessage);
+                        gameState = GameState.PLAYER_RESTART_OR_END;
+                    }
+
+                    break;
+                case PLAYER_RESTART_OR_END:
+                    System.out.println("Você deseja continuar jogando?\n1 - Sim\n2 - Não");
+                    reader.readLine();
 
                     break;
                 default:

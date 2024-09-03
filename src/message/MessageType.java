@@ -5,5 +5,7 @@ public enum MessageType {
     CHOOSE_SIDE,
     GAME_STATE,
     ERROR,
-    OK
+    OK,
+    PLAY,
+    END_GAME
 }

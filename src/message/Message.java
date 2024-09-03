@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
     private final int[] fields;
-    public static final int MSG_SIZE = 3;
+    public static final int MSG_SIZE = 2;
 
     public Message(int[] fields) {
         this.fields = fields;
@@ -28,5 +28,13 @@ public class Message implements Serializable {
 
     public boolean isErrorMessage() {
         return this.fields[0] == MessageType.ERROR.ordinal();
+    }
+
+    public boolean isPlayMessage() {
+        return this.fields[0] == MessageType.PLAY.ordinal();
+    }
+
+    public boolean isEndGameMessage() {
+        return this.fields[0] == MessageType.END_GAME.ordinal();
     }
 }

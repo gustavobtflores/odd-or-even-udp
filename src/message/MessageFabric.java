@@ -45,4 +45,22 @@ public class MessageFabric {
 
         return msg;
     }
+
+    public static Message createPlayMessage(int play){
+        Message msg = new Message(new int[Message.MSG_SIZE]);
+
+        msg.getFields()[0] = MessageType.PLAY.ordinal();
+        msg.getFields()[1] = play;
+
+        return msg;
+    }
+
+    public static Message createEndGameMessage(boolean winner) {
+        Message msg = new Message(new int[Message.MSG_SIZE]);
+
+        msg.getFields()[0] = MessageType.END_GAME.ordinal();
+        msg.getFields()[1] = winner ? 1 : 0;
+
+        return msg;
+    }
 }
