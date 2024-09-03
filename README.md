@@ -11,7 +11,15 @@
 ### 3. **Funcionalidades do Jogo**
 
 - [X] **3.1:** O servidor deve esperar que todos os jogadores se conectem para iniciar o jogo
-
+- [X] **3.2:** O servidor deve enviar uma mensagem para que o cliente altere o estado para receber a escolha de lado dos jogadores
+- [X] **3.3:** O servidor deve receber as escolhas dos jogadores e lançar um erro caso o lado que o jogador tentou escolher já tenha sido escolhido
+- [ ] **3.4:** O servidor deve tratar corretamente o caso em que o jogador usa um valor inválido para escolher o lado (como não inteiros, símbolos, etc.)
+- [X] **3.5:** Após todos os jogadores escolherem os seus lados, o servidor deve alterar o estado para receber as jogadas de cada jogador
+- [ ] **3.6:** O servidor deve tratar corretamente o caso em que o jogador envia um valor de jogada errado (como não inteiros, símbolos, etc.)
+- [X] **3.7:** Após todos os jogadores escolherem as suas jogadas, o servidor deve alterar o estado para computar o resultado da partida
+- [X] **3.8:** Após computar o resultado, o servidor deve enviar mensagens informando o resultado contextual (vencedor/perdedor) para os jogadores
+- [ ] **3.9:** Ao finalizar uma partida, o servidor deve alterar o estado para que os jogadores possam decidir se desejam continuar a jogar ou parar
+- [ ] **3.9.1:** Caso qualquer um dos jogadores decida parar de jogar, o servidor deve ser desligado e os clientes informados que devem finalizar a conexão 
 
 ### Classes
 
