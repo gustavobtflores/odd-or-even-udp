@@ -23,6 +23,9 @@
 
 ### Classes
 
-- Player: classe responsável por armazenar as informações de rede do jogador e eventualmente alguma informação sobre o jogo
-- OddEven: classe responsável por controlar as regras do jogo
-- UDPServer/UDPClient - classes que controlam a conexão na rede
+- **Player**: classe responsável por armazenar as informações de rede do jogador e informações do jogo relevantes ao contexto do jogador
+- **OddEven**: classe responsável por controlar as regras do jogo
+- **UDPServer/UDPClient:** classes responsáveis por estabelecer a conexão e manter a comunicação entre cliente e servidor
+- **Connection**: classe utilizada apenas no cliente para administrar a conexão com o servidor e receber/enviar mensagens
+  - **Receiver**: classe que extende Thread e utiliza uma fila para receber as mensagens e aguardar que o método readMessage seja usado para ler mensagens da fila
+  - **Broadcaster**: classe que extende Thread e utiliza uma fila para enviar as mensagens conforme disponibilidade do thread
