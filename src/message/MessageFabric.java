@@ -1,6 +1,6 @@
 package message;
 
-import game.GameState;
+import game.GameStateEnum;
 import player.PlayerSide;
 
 public class MessageFabric {
@@ -21,7 +21,7 @@ public class MessageFabric {
         return msg;
     }
 
-    public static Message createGameStateMessage(GameState state) {
+    public static Message createGameStateMessage(GameStateEnum state) {
         Message msg = new Message(new int[Message.MSG_SIZE]);
 
         msg.getFields()[0] = MessageType.GAME_STATE.ordinal();

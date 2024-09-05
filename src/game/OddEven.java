@@ -2,6 +2,10 @@ package game;
 
 import game.exceptions.GameFullException;
 import game.exceptions.SideAlreadyChosenException;
+import game.network.Broadcaster;
+import game.network.Receiver;
+import game.states.State;
+import game.states.WaitingPlayers;
 import player.Player;
 import player.PlayerSide;
 
@@ -12,11 +16,21 @@ import java.util.HashMap;
 public class OddEven {
     HashMap<String, Player> players = new HashMap<>();
     private boolean isOver = false;
-    private GameState state = GameState.WAITING_PLAYERS;
     private ArrayList<Integer> availableSides = new ArrayList<>(Arrays.asList(PlayerSide.ODD.ordinal(), PlayerSide.EVEN.ordinal()));
     private ArrayList<Integer> playList = new ArrayList<>();
+    private State currentState;
 
-    public OddEven(){}
+    public OddEven(){
+        this.currentState = new WaitingPlayers(this);
+    }
+
+    public void changeState(State state) {
+        this.currentState = state;
+    }
+
+    public void processRequest(Receiver receiver, Broadcaster broadcaster) {
+        this.currentState.handle(receiver, broadcaster);
+    }
 
     public void addPlayer(Player player) throws GameFullException {
         if(isFull()) {
@@ -77,14 +91,6 @@ public class OddEven {
 
     public boolean hasAllPlayersPlayed(){
         return this.playList.size() == 2;
-    }
-
-    public GameState getState(){
-        return this.state;
-    }
-
-    public void setState(GameState state) {
-        this.state = state;
     }
 
     public HashMap<String, Player> getPlayers() {
