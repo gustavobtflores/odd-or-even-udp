@@ -1,6 +1,6 @@
 package game;
 
-public enum GameState {
+public enum GameStateEnum {
     //Server
     WAITING_PLAYERS,
     WAITING_PLAYERS_CHOOSE_SIDE,

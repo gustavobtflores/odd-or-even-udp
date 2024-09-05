@@ -1,4 +1,4 @@
-import game.GameState;
+import game.GameStateEnum;
 import message.Message;
 import message.MessageFabric;
 import player.PlayerSide;
@@ -15,21 +15,21 @@ public class UDPClient {
         Connection connection = new Connection(socket, InetAddress.getByName(Config.SERVER_ADDRESS), Config.SERVER_PORT);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        GameState gameState = GameState.PLAYER_CONNECTING_SERVER;
+        GameStateEnum gameStateEnum = GameStateEnum.PLAYER_CONNECTING_SERVER;
 
         int counter = 0;
         Message msg = null;
 
-        gameLoop: while (gameState != GameState.ENDED) {
-            switch (gameState) {
-                case GameState.PLAYER_CONNECTING_SERVER:
+        gameLoop: while (gameStateEnum != GameStateEnum.ENDED) {
+            switch (gameStateEnum) {
+                case GameStateEnum.PLAYER_CONNECTING_SERVER:
                     connection.sendMessage(MessageFabric.createConnectionMessage());
                     msg = connection.readMessage(2000);
 
                     System.out.println(msg);
 
                     if(msg != null && !msg.isErrorMessage()) {
-                        gameState = GameState.PLAYER_WAITING_OTHERS;
+                        gameStateEnum = GameStateEnum.PLAYER_WAITING_OTHERS;
                     } else {
                         System.out.println("O servidor já está lotado");
                         System.out.println("Desconectando...");
@@ -42,8 +42,8 @@ public class UDPClient {
                 case PLAYER_WAITING_OTHERS:
                     msg = connection.readMessage();
 
-                    if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameState.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
-                        gameState = GameState.PLAYER_CHOOSING_SIDE;
+                    if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
+                        gameStateEnum = GameStateEnum.PLAYER_CHOOSING_SIDE;
                         System.out.println("Jogadores conectados");
                     } else if (counter <= 0) {
                         System.out.println("Esperando jogadores se conectarem...");
@@ -65,7 +65,7 @@ public class UDPClient {
                             System.out.println("Esse lado já foi escolhido por outro jogador!");
                             continue;
                         } else {
-                            gameState = GameState.PLAYER_WAITING_OPPONENT_CHOOSE;
+                            gameStateEnum = GameStateEnum.PLAYER_WAITING_OPPONENT_CHOOSE;
                         }
                     }
 
@@ -76,8 +76,8 @@ public class UDPClient {
                     while(true) {
                         msg = connection.readMessage(2000);
 
-                        if(msg != null && msg.getFields()[1] == GameState.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
-                            gameState = GameState.PLAYER_CHOOSING_PLAY;
+                        if(msg != null && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
+                            gameStateEnum = GameStateEnum.PLAYER_CHOOSING_PLAY;
                             break;
                         } else {
                             Thread.sleep(500);
@@ -93,7 +93,7 @@ public class UDPClient {
                     msg = connection.readMessage(2000);
 
                     if(msg != null) {
-                        gameState = GameState.PLAYER_WAITING_RESULT;
+                        gameStateEnum = GameStateEnum.PLAYER_WAITING_RESULT;
                     }
 
                     break;
@@ -103,7 +103,7 @@ public class UDPClient {
                     if(msg != null && msg.isEndGameMessage()) {
                         String endGameMessage = msg.getFields()[1] != 0 ? "Você ganhou :)" : "Você perdeu :(";
                         System.out.println(endGameMessage);
-                        gameState = GameState.PLAYER_RESTART_OR_END;
+                        gameStateEnum = GameStateEnum.PLAYER_RESTART_OR_END;
                     }
 
                     break;
