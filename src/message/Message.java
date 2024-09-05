@@ -37,4 +37,12 @@ public class Message implements Serializable {
     public boolean isEndGameMessage() {
         return this.fields[0] == MessageType.END_GAME.ordinal();
     }
+
+    public boolean isRestartGameMessage() {
+        return this.fields[0] == MessageType.RESTART_GAME.ordinal();
+    }
+
+    public boolean isOkMessage() {
+        return this.fields[0] == MessageType.OK.ordinal();
+    }
 }

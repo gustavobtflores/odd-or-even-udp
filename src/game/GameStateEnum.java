@@ -2,11 +2,8 @@ package game;
 
 public enum GameStateEnum {
     //Server
-    WAITING_PLAYERS,
     WAITING_PLAYERS_CHOOSE_SIDE,
     WAITING_PLAYERS_CHOOSE_PLAY,
-    COMPUTE_RESULT,
-    WAITING_PLAYERS_RESTART_OR_END,
 
     //Client
     PLAYER_CONNECTING_SERVER,
@@ -16,6 +13,7 @@ public enum GameStateEnum {
     PLAYER_CHOOSING_PLAY,
     PLAYER_WAITING_RESULT,
     PLAYER_RESTART_OR_END,
+    PLAYER_WAITING_OPPONENT_RESTART,
 
     //Both
     ENDED,

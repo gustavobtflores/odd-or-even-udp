@@ -42,8 +42,6 @@ public class Broadcaster extends Thread {
 
                     DatagramPacket packet = new DatagramPacket(objectData, objectData.length, destinationIp, destinationPort);
 
-                    System.out.println("Enviando mensagem para o IP: " + destinationIp + " e porta: " + destinationPort);
-
                     this.socket.send(packet);
                 } catch (IOException e) {
                     e.printStackTrace();

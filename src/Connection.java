@@ -114,8 +114,6 @@ public class Connection {
 
                         DatagramPacket packet = new DatagramPacket(objectData, objectData.length, ip, port);
 
-                        System.out.println("Enviando mensagem para o IP: " + ip + " e porta: " + port);
-
                         this.socket.send(packet);
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -16,12 +16,26 @@ import java.util.HashMap;
 public class OddEven {
     HashMap<String, Player> players = new HashMap<>();
     private boolean isOver = false;
-    private ArrayList<Integer> availableSides = new ArrayList<>(Arrays.asList(PlayerSide.ODD.ordinal(), PlayerSide.EVEN.ordinal()));
-    private ArrayList<Integer> playList = new ArrayList<>();
+    private ArrayList<Integer> availableSides;
+    private final ArrayList<Integer> playList = new ArrayList<>();
     private State currentState;
+    private final HashMap<Player, Boolean> wantToReplay = new HashMap<>();
 
     public OddEven(){
         this.currentState = new WaitingPlayers(this);
+        setAvailableSides();
+    }
+
+    private void setAvailableSides() {
+        this.availableSides = new ArrayList<>(Arrays.asList(PlayerSide.ODD.ordinal(), PlayerSide.EVEN.ordinal()));
+    }
+
+    private void resetPlayList() {
+        this.playList.clear();
+    }
+
+    private void resetWantToReplay() {
+        this.wantToReplay.clear();
     }
 
     public void changeState(State state) {
@@ -49,7 +63,6 @@ public class OddEven {
             Player player = players.get(playerKey);
 
             player.setSide(side);
-            System.out.println("Lado " + side + " escolhido pelo jogador " + player.getAddress() + " " + player.getPort());
         } else {
             throw new SideAlreadyChosenException("Esse lado já foi escolhido por outro jogador");
         }
@@ -57,6 +70,12 @@ public class OddEven {
 
     public void play(int play) {
         this.playList.add(play);
+    }
+
+    public void replay(String playerKey, boolean replay) {
+        Player player = players.get(playerKey);
+
+        wantToReplay.put(player, replay);
     }
 
     public Player computeWinner(){
@@ -91,6 +110,33 @@ public class OddEven {
 
     public boolean hasAllPlayersPlayed(){
         return this.playList.size() == 2;
+    }
+
+    public boolean hasAllPlayersAnsweredReplay() {
+        return this.wantToReplay.size() == 2;
+    }
+
+    public boolean allWantToReplay() {
+        boolean allReplay = true;
+
+        for(boolean replay: wantToReplay.values()){
+            if (!replay) {
+                allReplay = false;
+                break;
+            }
+        }
+
+        return allReplay;
+    }
+
+    public void restart() {
+        setAvailableSides();
+        resetPlayList();
+        resetWantToReplay();
+    }
+
+    public void end(){
+        this.isOver = true;
     }
 
     public HashMap<String, Player> getPlayers() {

@@ -15,38 +15,38 @@ public class UDPClient {
         Connection connection = new Connection(socket, InetAddress.getByName(Config.SERVER_ADDRESS), Config.SERVER_PORT);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        GameStateEnum gameStateEnum = GameStateEnum.PLAYER_CONNECTING_SERVER;
+        GameStateEnum gameState = GameStateEnum.PLAYER_CONNECTING_SERVER;
 
         int counter = 0;
         Message msg = null;
 
-        gameLoop: while (gameStateEnum != GameStateEnum.ENDED) {
-            switch (gameStateEnum) {
+        gameLoop: while (gameState != GameStateEnum.ENDED) {
+            switch (gameState) {
                 case GameStateEnum.PLAYER_CONNECTING_SERVER:
+                    System.out.println("Conectando-se ao servidor...");
                     connection.sendMessage(MessageFabric.createConnectionMessage());
                     msg = connection.readMessage(2000);
 
-                    System.out.println(msg);
-
-                    if(msg != null && !msg.isErrorMessage()) {
-                        gameStateEnum = GameStateEnum.PLAYER_WAITING_OTHERS;
-                    } else {
-                        System.out.println("O servidor já está lotado");
-                        System.out.println("Desconectando...");
-                        break gameLoop;
+                    if(msg != null) {
+                        if(!msg.isErrorMessage()){
+                            System.out.println("Conectado!");
+                            gameState = GameStateEnum.PLAYER_WAITING_OTHERS;
+                        } else {
+                            System.out.println("O servidor já está lotado");
+                            System.out.println("Desconectando...");
+                            break gameLoop;
+                        }
                     }
-
-                    Thread.sleep(500);
 
                     break;
                 case PLAYER_WAITING_OTHERS:
                     msg = connection.readMessage();
 
                     if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
-                        gameStateEnum = GameStateEnum.PLAYER_CHOOSING_SIDE;
+                        gameState = GameStateEnum.PLAYER_CHOOSING_SIDE;
                         System.out.println("Jogadores conectados");
                     } else if (counter <= 0) {
-                        System.out.println("Esperando jogadores se conectarem...");
+                        System.out.println("Esperando outros jogadores se conectarem...");
                         counter++;
                     }
 
@@ -65,7 +65,7 @@ public class UDPClient {
                             System.out.println("Esse lado já foi escolhido por outro jogador!");
                             continue;
                         } else {
-                            gameStateEnum = GameStateEnum.PLAYER_WAITING_OPPONENT_CHOOSE;
+                            gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_CHOOSE;
                         }
                     }
 
@@ -77,7 +77,7 @@ public class UDPClient {
                         msg = connection.readMessage(2000);
 
                         if(msg != null && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
-                            gameStateEnum = GameStateEnum.PLAYER_CHOOSING_PLAY;
+                            gameState = GameStateEnum.PLAYER_CHOOSING_PLAY;
                             break;
                         } else {
                             Thread.sleep(500);
@@ -93,7 +93,7 @@ public class UDPClient {
                     msg = connection.readMessage(2000);
 
                     if(msg != null) {
-                        gameStateEnum = GameStateEnum.PLAYER_WAITING_RESULT;
+                        gameState = GameStateEnum.PLAYER_WAITING_RESULT;
                     }
 
                     break;
@@ -103,13 +103,41 @@ public class UDPClient {
                     if(msg != null && msg.isEndGameMessage()) {
                         String endGameMessage = msg.getFields()[1] != 0 ? "Você ganhou :)" : "Você perdeu :(";
                         System.out.println(endGameMessage);
-                        gameStateEnum = GameStateEnum.PLAYER_RESTART_OR_END;
+                        gameState = GameStateEnum.PLAYER_RESTART_OR_END;
                     }
 
                     break;
                 case PLAYER_RESTART_OR_END:
                     System.out.println("Você deseja continuar jogando?\n1 - Sim\n2 - Não");
-                    reader.readLine();
+                    int playerRestart = Integer.parseInt(reader.readLine());
+                    connection.sendMessage(MessageFabric.createRestartGameMessage(playerRestart == 1));
+
+                    if(playerRestart != 1) {
+                        gameState = GameStateEnum.ENDED;
+                        System.out.println("Jogo encerrado, desconectando...");
+                        break;
+                    }
+
+                    msg = connection.readMessage(2000);
+
+                    if(msg != null && msg.isOkMessage()) {
+                        gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_RESTART;
+                    }
+
+                    break;
+                case PLAYER_WAITING_OPPONENT_RESTART:
+                    System.out.println("Aguardando outro jogador decidir se deseja continuar jogando ou não...");
+
+                    msg = connection.readMessage(2000);
+
+                    if(msg != null && msg.isRestartGameMessage()){
+                        if(msg.getFields()[1] == 1) {
+                            gameState = GameStateEnum.PLAYER_CHOOSING_SIDE;
+                        } else {
+                            System.out.println("O outro jogador decidiu não continuar jogando, desconectando...");
+                            gameState = GameStateEnum.ENDED;
+                        }
+                    }
 
                     break;
                 default:

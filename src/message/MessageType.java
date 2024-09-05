@@ -7,5 +7,6 @@ public enum MessageType {
     ERROR,
     OK,
     PLAY,
-    END_GAME
+    END_GAME,
+    RESTART_GAME
 }

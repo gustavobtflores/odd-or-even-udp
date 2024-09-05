@@ -63,4 +63,13 @@ public class MessageFabric {
 
         return msg;
     }
+
+    public static Message createRestartGameMessage(boolean restart) {
+        Message msg = new Message(new int[Message.MSG_SIZE]);
+
+        msg.getFields()[0] = MessageType.RESTART_GAME.ordinal();
+        msg.getFields()[1] = restart ? 1 : 0;
+
+        return msg;
+    }
 }
