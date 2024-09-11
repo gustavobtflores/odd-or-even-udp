@@ -22,7 +22,9 @@ public class WaitingPlayersChoosePlay extends State {
 
         if (packet.message().isPlayMessage()) {
             int playerPlay = packet.message().getFields()[1];
-            game.play(playerPlay);
+            String playerKey = packet.address().toString() + packet.port();
+
+            game.play(playerKey, playerPlay);
             broadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
         }
 

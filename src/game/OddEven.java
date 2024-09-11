@@ -68,12 +68,15 @@ public class OddEven {
         }
     }
 
-    public void play(int play) {
+    public void play(String playerKey, int play) {
+        Player player = players.get(playerKey);
+        System.out.println("Jogada recebida do IP: " + player.getAddress() + " e porta: " + player.getPort() + " valor: " + play);
         this.playList.add(play);
     }
 
     public void replay(String playerKey, boolean replay) {
         Player player = players.get(playerKey);
+        System.out.println("Escolha de jogar novamente/finalizar recebida do IP: " + player.getAddress() + " e porta: " + player.getPort() + " valor: " + replay);
 
         wantToReplay.put(player, replay);
     }

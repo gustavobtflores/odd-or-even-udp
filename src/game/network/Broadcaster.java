@@ -48,7 +48,7 @@ public class Broadcaster extends Thread {
                 }
             } else {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

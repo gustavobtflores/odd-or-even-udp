@@ -25,7 +25,7 @@ public class UDPClient {
                 case GameStateEnum.PLAYER_CONNECTING_SERVER:
                     System.out.println("Conectando-se ao servidor...");
                     connection.sendMessage(MessageFabric.createConnectionMessage());
-                    msg = connection.readMessage(2000);
+                    msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                     if(msg != null) {
                         if(!msg.isErrorMessage()){
@@ -54,19 +54,23 @@ public class UDPClient {
                 case PLAYER_CHOOSING_SIDE:
                     System.out.println("Escolha o lado que deseja:\n1 - Ímpar\n2 - Par");
 
-                    int playerChoose = Integer.parseInt(reader.readLine());
+                    try {
+                        int playerChoose = Integer.parseInt(reader.readLine());
 
-                    connection.sendMessage(MessageFabric.createChooseSideMessage(PlayerSide.values()[playerChoose - 1]));
+                        connection.sendMessage(MessageFabric.createChooseSideMessage(PlayerSide.values()[playerChoose - 1]));
 
-                    msg = connection.readMessage(2000);
+                        msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
-                    if(msg != null){
-                        if(msg.isErrorMessage()){
-                            System.out.println("Esse lado já foi escolhido por outro jogador!");
-                            continue;
-                        } else {
-                            gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_CHOOSE;
+                        if(msg != null){
+                            if(msg.isErrorMessage()){
+                                System.out.println("Esse lado já foi escolhido por outro jogador, tente novamente!");
+                                continue;
+                            } else {
+                                gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_CHOOSE;
+                            }
                         }
+                    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                        System.out.println("Valor de lado inválido, tente novamente!");
                     }
 
                     break;
@@ -74,7 +78,7 @@ public class UDPClient {
                     System.out.println("Aguarde o outro jogador escolher o lado...");
 
                     while(true) {
-                        msg = connection.readMessage(2000);
+                        msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                         if(msg != null && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
                             gameState = GameStateEnum.PLAYER_CHOOSING_PLAY;
@@ -86,19 +90,23 @@ public class UDPClient {
 
                     break;
                 case PLAYER_CHOOSING_PLAY:
-                    System.out.println("Digite o número que deseja jogar: ");
-                    int playerPlay = Integer.parseInt(reader.readLine());
-                    connection.sendMessage(MessageFabric.createPlayMessage(playerPlay));
+                    try {
+                        System.out.println("Digite o número que deseja jogar: ");
+                        int playerPlay = Integer.parseInt(reader.readLine());
+                        connection.sendMessage(MessageFabric.createPlayMessage(playerPlay));
 
-                    msg = connection.readMessage(2000);
+                        msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
-                    if(msg != null) {
-                        gameState = GameStateEnum.PLAYER_WAITING_RESULT;
+                        if(msg != null) {
+                            gameState = GameStateEnum.PLAYER_WAITING_RESULT;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Valor de lado inválido, tente novamente!");
                     }
 
                     break;
                 case PLAYER_WAITING_RESULT:
-                    msg = connection.readMessage(2000);
+                    msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                     if(msg != null && msg.isEndGameMessage()) {
                         String endGameMessage = msg.getFields()[1] != 0 ? "Você ganhou :)" : "Você perdeu :(";
@@ -108,27 +116,35 @@ public class UDPClient {
 
                     break;
                 case PLAYER_RESTART_OR_END:
-                    System.out.println("Você deseja continuar jogando?\n1 - Sim\n2 - Não");
-                    int playerRestart = Integer.parseInt(reader.readLine());
-                    connection.sendMessage(MessageFabric.createRestartGameMessage(playerRestart == 1));
+                    try {
+                        System.out.println("Você deseja continuar jogando?\n1 - Sim\n2 - Não");
+                        int playerRestart = Integer.parseInt(reader.readLine());
+                        connection.sendMessage(MessageFabric.createRestartGameMessage(playerRestart == 1));
 
-                    if(playerRestart != 1) {
-                        gameState = GameStateEnum.ENDED;
-                        System.out.println("Jogo encerrado, desconectando...");
-                        break;
+                        if(playerRestart != 1) {
+                            gameState = GameStateEnum.ENDED;
+                            System.out.println("Jogo encerrado, desconectando...");
+
+                            while(connection.readMessage(Config.RESPONSE_TIMEOUT) == null) continue;
+
+                            break;
+                        }
+
+                        msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
+
+                        if(msg != null){
+                            if(msg.isOkMessage()) {
+                                gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_RESTART;
+                            } else if(msg.isRestartGameMessage() && msg.getFields()[1] != 1) {
+                                gameState = GameStateEnum.ENDED;
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Opção inválida, tente novamente!");
                     }
-
-                    msg = connection.readMessage(2000);
-
-                    if(msg != null && msg.isOkMessage()) {
-                        gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_RESTART;
-                    }
-
                     break;
                 case PLAYER_WAITING_OPPONENT_RESTART:
-                    System.out.println("Aguardando outro jogador decidir se deseja continuar jogando ou não...");
-
-                    msg = connection.readMessage(2000);
+                    msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                     if(msg != null && msg.isRestartGameMessage()){
                         if(msg.getFields()[1] == 1) {
@@ -136,14 +152,14 @@ public class UDPClient {
                         } else {
                             System.out.println("O outro jogador decidiu não continuar jogando, desconectando...");
                             gameState = GameStateEnum.ENDED;
+                            break;
                         }
                     }
 
-                    break;
-                default:
-            }
+                    System.out.println("Aguardando outro jogador decidir se deseja continuar jogando ou não...");
 
-            Thread.sleep(500);
+                    break;
+            }
         }
 
         connection.stop();

@@ -24,6 +24,7 @@ public class UDPServer {
             Thread.sleep(1000);
         }
 
+        System.out.println("Jogo encerrado, finalizando processo...");
         System.exit(0);
     }
 }
