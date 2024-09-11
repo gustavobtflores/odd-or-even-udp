@@ -29,3 +29,5 @@
 - **Connection**: classe utilizada apenas no cliente para administrar a conexão com o servidor e receber/enviar mensagens
   - **Receiver**: classe que extende Thread e utiliza uma fila para receber as mensagens e aguardar que o método readMessage seja usado para ler mensagens da fila
   - **Broadcaster**: classe que extende Thread e utiliza uma fila para enviar as mensagens conforme disponibilidade do thread
+- **ClientPacket**: classe auxiliar record criada para ser utilizada nos threads do servidor contendo as informações do cliente que deve receber a mensagem
+- **State**: classe abstrata para implementação do _State Pattern_ sendo herdada por todas as classes que implementam um estado do jogo
