@@ -1,6 +1,5 @@
 package game.states;
 
-import game.GameStateEnum;
 import game.OddEven;
 import game.network.Broadcaster;
 import game.network.Receiver;

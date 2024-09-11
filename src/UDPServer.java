@@ -1,7 +1,6 @@
 import game.OddEven;
 import game.network.Broadcaster;
 import game.network.Receiver;
-import game.utils.ClientPacket;
 
 import java.net.DatagramSocket;
 

@@ -18,7 +18,7 @@ public class UDPClient {
         GameStateEnum gameState = GameStateEnum.PLAYER_CONNECTING_SERVER;
 
         int counter = 0;
-        Message msg = null;
+        Message msg;
 
         gameLoop: while (gameState != GameStateEnum.ENDED) {
             switch (gameState) {
