@@ -1,5 +1,6 @@
 package game.states;
 
+import game.GameStateEnum;
 import game.OddEven;
 import game.network.Broadcaster;
 import game.network.Receiver;
@@ -25,19 +26,19 @@ public class WaitingPlayersRestartOrEnd extends State {
 
         String playerKey = packet.address().toString() + packet.port();
 
-        game.replay(playerKey, packet.message().getFields()[1] == 1);
+        game.replay(playerKey, packet.message().getValue() == GameStateEnum.PLAYER_RESTART);
 
         if(game.hasAllPlayersAnsweredReplay()) {
             if(game.allWantToReplay()){
                 for(Player player: game.getPlayers().values()){
-                    broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createRestartGameMessage(true)));
+                    broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createRestartGameMessage(GameStateEnum.PLAYER_RESTART)));
                 }
 
                 game.restart();
                 game.changeState(new WaitingPlayersChooseSide(game));
             } else {
                 for(Player player: game.getPlayers().values()){
-                    broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createRestartGameMessage(false)));
+                    broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createRestartGameMessage(GameStateEnum.PLAYER_END)));
                 }
 
                 game.end();

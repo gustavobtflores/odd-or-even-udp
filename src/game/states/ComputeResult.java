@@ -1,5 +1,6 @@
 package game.states;
 
+import game.GameStateEnum;
 import game.OddEven;
 import game.network.Broadcaster;
 import game.network.Receiver;
@@ -21,7 +22,8 @@ public class ComputeResult extends State {
 
         if (winnerPlayer != null) {
             for (Player player : game.getPlayers().values()) {
-                broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createEndGameMessage(player.equals(winnerPlayer))));
+                GameStateEnum winStateEnum = player.equals(winnerPlayer) ? GameStateEnum.PLAYER_WIN : GameStateEnum.PLAYER_LOSE;
+                broadcaster.sendMessage(new ClientPacket(player.getAddress(), player.getPort(), MessageFabric.createEndGameMessage(winStateEnum)));
             }
 
             game.changeState(new WaitingPlayersRestartOrEnd(game));

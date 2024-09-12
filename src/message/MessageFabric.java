@@ -5,71 +5,34 @@ import player.PlayerSide;
 
 public class MessageFabric {
     public static Message createConnectionMessage() {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.CONNECT.ordinal();
-
-        return msg;
+        return new Message(MessageType.CONNECT);
     }
 
     public static Message createChooseSideMessage(PlayerSide side) {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.CHOOSE_SIDE.ordinal();
-        msg.getFields()[1] = side.ordinal();
-
-        return msg;
+        return new Message(MessageType.CHOOSE_SIDE, side);
     }
 
     public static Message createGameStateMessage(GameStateEnum state) {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.GAME_STATE.ordinal();
-        msg.getFields()[1] = state.ordinal();
-
-        return msg;
+        return new Message(MessageType.GAME_STATE, state);
     }
 
     public static Message createErrorMessage() {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.ERROR.ordinal();
-
-        return msg;
+        return new Message(MessageType.ERROR);
     }
 
     public static Message createOkMessage() {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.OK.ordinal();
-
-        return msg;
+        return new Message(MessageType.OK);
     }
 
     public static Message createPlayMessage(int play){
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.PLAY.ordinal();
-        msg.getFields()[1] = play;
-
-        return msg;
+        return new Message(MessageType.PLAY, play);
     }
 
-    public static Message createEndGameMessage(boolean winner) {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.END_GAME.ordinal();
-        msg.getFields()[1] = winner ? 1 : 0;
-
-        return msg;
+    public static Message createEndGameMessage(GameStateEnum gameResult) {
+        return new Message(MessageType.END_GAME, gameResult);
     }
 
-    public static Message createRestartGameMessage(boolean restart) {
-        Message msg = new Message(new int[Message.MSG_SIZE]);
-
-        msg.getFields()[0] = MessageType.RESTART_GAME.ordinal();
-        msg.getFields()[1] = restart ? 1 : 0;
-
-        return msg;
+    public static Message createRestartGameMessage(GameStateEnum restartDecision) {
+        return new Message(MessageType.RESTART_GAME, restartDecision);
     }
 }

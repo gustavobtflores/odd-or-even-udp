@@ -42,7 +42,7 @@ public class UDPClient {
                 case PLAYER_WAITING_OTHERS:
                     msg = connection.readMessage();
 
-                    if (msg != null && msg.isGameStateMessage() && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_SIDE.ordinal()) {
+                    if (msg != null && msg.isGameStateMessage() && msg.getValue() == GameStateEnum.WAITING_PLAYERS_CHOOSE_SIDE) {
                         gameState = GameStateEnum.PLAYER_CHOOSING_SIDE;
                         System.out.println("Jogadores conectados");
                     } else if (counter <= 0) {
@@ -80,7 +80,7 @@ public class UDPClient {
                     while(true) {
                         msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
-                        if(msg != null && msg.getFields()[1] == GameStateEnum.WAITING_PLAYERS_CHOOSE_PLAY.ordinal()) {
+                        if(msg != null && msg.getValue() == GameStateEnum.WAITING_PLAYERS_CHOOSE_PLAY) {
                             gameState = GameStateEnum.PLAYER_CHOOSING_PLAY;
                             break;
                         } else {
@@ -109,7 +109,7 @@ public class UDPClient {
                     msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                     if(msg != null && msg.isEndGameMessage()) {
-                        String endGameMessage = msg.getFields()[1] != 0 ? "Você ganhou :)" : "Você perdeu :(";
+                        String endGameMessage = msg.getValue() == GameStateEnum.PLAYER_WIN ? "Você ganhou :)" : "Você perdeu :(";
                         System.out.println(endGameMessage);
                         gameState = GameStateEnum.PLAYER_RESTART_OR_END;
                     }
@@ -119,7 +119,7 @@ public class UDPClient {
                     try {
                         System.out.println("Você deseja continuar jogando?\n1 - Sim\n2 - Não");
                         int playerRestart = Integer.parseInt(reader.readLine());
-                        connection.sendMessage(MessageFabric.createRestartGameMessage(playerRestart == 1));
+                        connection.sendMessage(MessageFabric.createRestartGameMessage(playerRestart == 1 ? GameStateEnum.PLAYER_RESTART : GameStateEnum.PLAYER_END));
 
                         if(playerRestart != 1) {
                             gameState = GameStateEnum.ENDED;
@@ -135,7 +135,7 @@ public class UDPClient {
                         if(msg != null){
                             if(msg.isOkMessage()) {
                                 gameState = GameStateEnum.PLAYER_WAITING_OPPONENT_RESTART;
-                            } else if(msg.isRestartGameMessage() && msg.getFields()[1] != 1) {
+                            } else if(msg.isRestartGameMessage() && msg.getValue() != GameStateEnum.PLAYER_RESTART) {
                                 gameState = GameStateEnum.ENDED;
                             }
                         }
@@ -147,7 +147,7 @@ public class UDPClient {
                     msg = connection.readMessage(Config.RESPONSE_TIMEOUT);
 
                     if(msg != null && msg.isRestartGameMessage()){
-                        if(msg.getFields()[1] == 1) {
+                        if(msg.getValue() == GameStateEnum.PLAYER_RESTART) {
                             gameState = GameStateEnum.PLAYER_CHOOSING_SIDE;
                         } else {
                             System.out.println("O outro jogador decidiu não continuar jogando, desconectando...");
