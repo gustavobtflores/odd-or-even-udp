@@ -23,7 +23,7 @@ public class WaitingPlayersChooseSide extends State {
     public void handle(Receiver receiver, Broadcaster broadcaster) {
         ClientPacket packet = receiver.readMessage();
 
-        if(packet == null || !packet.message().isChooseSideMessage()) return;
+        if (!packet.message().isChooseSideMessage()) return;
 
         PlayerSide chosenSide = (PlayerSide) packet.message().getValue();
         System.out.println("Escolha de lado recebida do IP: " + packet.address() + " e porta: " + packet.port() + " valor: " + chosenSide);

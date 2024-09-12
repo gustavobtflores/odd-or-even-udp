@@ -17,15 +17,14 @@ public class WaitingPlayersChoosePlay extends State {
     @Override
     public void handle(Receiver receiver, Broadcaster broadcaster) {
         ClientPacket packet = receiver.readMessage();
-        if(packet == null) return;
 
-        if (packet.message().isPlayMessage()) {
-            Object playerPlay = packet.message().getValue();
-            String playerKey = packet.address().toString() + packet.port();
+        if (!packet.message().isPlayMessage()) return;
 
-            game.play(playerKey, (Integer) playerPlay);
-            broadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
-        }
+        Object playerPlay = packet.message().getValue();
+        String playerKey = packet.address().toString() + packet.port();
+
+        game.play(playerKey, (Integer) playerPlay);
+        broadcaster.sendMessage(new ClientPacket(packet.address(), packet.port(), MessageFabric.createOkMessage()));
 
         if (game.hasAllPlayersPlayed()) game.changeState(new ComputeResult(game));
     }

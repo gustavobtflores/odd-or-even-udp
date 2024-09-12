@@ -20,7 +20,6 @@ public class WaitingPlayers extends State {
 
     public void handle(Receiver serverReceiver, Broadcaster serverBroadcaster) {
         ClientPacket packet = serverReceiver.readMessage();
-        if(packet == null) return;
 
         try {
             game.addPlayer(new Player(packet.address(), packet.port()));
