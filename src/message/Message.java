@@ -3,46 +3,56 @@ package message;
 import java.io.Serializable;
 
 public class Message implements Serializable {
-    private final int[] fields;
-    public static final int MSG_SIZE = 2;
+    private final MessageType messageType;
+    private final Object value;
 
-    public Message(int[] fields) {
-        this.fields = fields;
+    public Message(MessageType messageType, Object value) {
+        this.messageType = messageType;
+        this.value = value;
     }
 
-    public int[] getFields() {
-        return this.fields;
+    public Message(MessageType messageType) {
+        this.messageType = messageType;
+        this.value = null;
+    }
+
+    public MessageType getMessageType() {
+        return messageType;
+    }
+
+    public Object getValue() {
+        return value;
     }
 
     public boolean isConnectionMessage() {
-        return this.fields[0] == MessageType.CONNECT.ordinal();
+        return this.messageType == MessageType.CONNECT;
     }
 
     public boolean isChooseSideMessage(){
-        return this.fields[0] == MessageType.CHOOSE_SIDE.ordinal();
+        return this.messageType == MessageType.CHOOSE_SIDE;
     }
 
     public boolean isGameStateMessage() {
-        return this.fields[0] == MessageType.GAME_STATE.ordinal();
+        return this.messageType == MessageType.GAME_STATE;
     }
 
     public boolean isErrorMessage() {
-        return this.fields[0] == MessageType.ERROR.ordinal();
+        return this.messageType == MessageType.ERROR;
     }
 
     public boolean isPlayMessage() {
-        return this.fields[0] == MessageType.PLAY.ordinal();
+        return this.messageType == MessageType.PLAY;
     }
 
     public boolean isEndGameMessage() {
-        return this.fields[0] == MessageType.END_GAME.ordinal();
+        return this.messageType == MessageType.END_GAME;
     }
 
     public boolean isRestartGameMessage() {
-        return this.fields[0] == MessageType.RESTART_GAME.ordinal();
+        return this.messageType == MessageType.RESTART_GAME;
     }
 
     public boolean isOkMessage() {
-        return this.fields[0] == MessageType.OK.ordinal();
+        return this.messageType == MessageType.OK;
     }
 }

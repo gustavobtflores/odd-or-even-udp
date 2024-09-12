@@ -23,6 +23,14 @@ public class Receiver extends Thread {
     }
 
     public synchronized ClientPacket readMessage() {
+        while(this.queue.peek() == null) {
+            try {
+                Thread.sleep(500);
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         return this.queue.poll();
     }
 
